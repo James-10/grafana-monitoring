@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: principa-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: principa-monitoring
+  template:
+    metadata:
+      labels:
+        app: principa-monitoring
+    spec:
+      # initContainers:
+      # - name: init-create-dirs
+      #   image: alpine:latest
+      #   command: ['sh', '-c', 'mkdir -p /etc/nginx/ssl']
+      containers:
+      - name: nginx-monitoring
+        image: nginx-monitoring:v1.0.0
+        imagePullPolicy: Never
+        # command: ['sh', '-c']
+        # args:
+        # - |
+        #   mkdir -p /etc/nginx/ssl
+        #   nginx -g 'daemon off;'
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: https
+          containerPort: 443
+          protocol: TCP
+        volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        - name: nginx-hosts-volume
+          mountPath: /etc/hosts
+          subPath: hosts
+          readOnly: true
+        - name: nginx-pass
+          mountPath: /etc/nginx/ssl/cert_password
+          subPath: cert_password
+          readOnly: true
+        - name: ssl-certificates
+          mountPath: /etc/nginx/ssl
+      volumes:
+      - name: nginx-config-volume
+        configMap:
+          name: nginx-config
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+      - name: nginx-hosts-volume
+        configMap:
+          name: nginx-hosts-config
+          items:
+          - key: hosts
+            path: hosts
+      - name: ssl-certificates
+        hostPath:
+          path: /certs
+      - name: nginx-pass
+        hostPath:
+          path: /certs/cert_password
+
+
+
+

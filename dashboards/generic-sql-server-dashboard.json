@@ -1,0 +1,909 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "light-red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 63,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "  SELECT\r\n  TOP(50) package_name,\r\n  COUNT(status)\r\nFROM\r\n  SSISDB.catalog.executions\r\nWHERE created_time BETWEEN  DATEADD(DAY, -2, GETDATE()) AND GETDATE()\r\nAND [status] IN (4, 6)\r\nGROUP BY\r\n  package_name",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SSIS Package Failures Last 2 days",
+      "transformations": [
+        {
+          "id": "formatTime",
+          "options": {
+            "outputFormat": "",
+            "timeField": "created_time",
+            "useTimezone": true
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "f2dd5c76-1cd5-451e-ae6b-46c4fdb4d2ca"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PackageName"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 294
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "DECLARE @RunningStatus INT = 2;\r\n\r\nWITH CTE_Packages\r\nAS (\r\nSELECT DATEDIFF(MINUTE, CAST(start_time AS DATETIME), CAST(end_time AS DATETIME)) AS Duration, * FROM [SSISDB].[catalog].[executions]\r\nWHERE package_name IN ( SELECT package_name FROM [SSISDB].[catalog].[executions] WHERE status = @RunningStatus)\r\n\r\n)\r\n\r\nSELECT a.package_name AS PackageName, CAST(AVG(Duration) AS VARCHAR(10)) + ' Mins'  AS AVG_Duration\r\n, CASE \r\n\tWHEN b.RunningDuration > 120\r\n\t\tTHEN CAST(CAST(b.RunningDuration AS INT)/60 AS VARCHAR(10)) + ' Mins'\r\n\tELSE CAST(b.RunningDuration AS VARCHAR(10)) + ' s'\r\n\tEND\t\t\t\t\t\t\t\t\t\t\t\t\tAS CurrentDuration\r\nFROM CTE_Packages AS a\r\nJOIN ( SELECT DATEDIFF(SECOND, CAST(start_time AS DATETIME), GETDATE()) AS RunningDuration, package_name FROM [SSISDB].[catalog].[executions] WHERE status = @RunningStatus) AS b\r\n    ON a.package_name = b.package_name\r\nGROUP BY a.package_name, b.RunningDuration",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SSIS Packages Currently Running",
+      "type": "table"
+    },
+    {
+      "datasource": {},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT [PackageName]\r\n      ,[DateTimeStart] AS DateExecuted\r\n  FROM [MKS_MasterData].[dbo].[DimAudit]\r\n  WHERE CompletedAllSteps = 1\r\n  AND DateTimeStart > DATEADD(WEEK, -1, GETDATE())\r\n  AND SuccessFlag = 'Y'\r\n  ORDER BY DateExecuted DESC",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Speed Successful Executions (Last Week)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "f2dd5c76-1cd5-451e-ae6b-46c4fdb4d2ca"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "DECLARE @DaysWindow INT = 30;\r\n\r\nWITH CTE_Date\r\nAS \r\n(SELECT DateKey\r\n\t  , Date \r\n FROM [MKS_MasterData].[dbo].[DimDate] \r\n WHERE Date BETWEEN DATEADD(DAY, -@DaysWindow, GETDATE()) AND GETDATE()\r\n)\r\n\r\n, CTE_Errors\r\nAS\r\n(\r\n  SELECT\r\n    jh.run_date\r\n  , COUNT(*) AS ErrorCount\r\n  FROM ( SELECT DISTINCT job_id FROM [msdb].[dbo].[sysjobschedules]) js\r\n  \r\n  LEFT JOIN [msdb].[dbo].[sysjobs] j\r\n    ON j.[job_id] = js.[job_id]\r\n \r\n  LEFT JOIN [msdb].[dbo].[sysjobhistory] jh\r\n    ON jh.[job_id] = js.[job_id]\r\n\r\n WHERE [message] LIKE '%job fail%'\r\n  AND CAST(SUBSTRING(CAST(run_date AS VARCHAR(8)), 1,4) + '-' + SUBSTRING(CAST(run_date AS VARCHAR(8)), 5,2) + '-' + SUBSTRING(CAST(run_date AS VARCHAR(8)), 7,2) AS DATETIME) \r\n        BETWEEN DATEADD(DAY, -@DaysWindow, GETDATE()) AND  GETDATE()\r\n GROUP BY run_date\r\n)\r\n\r\n\r\nSELECT d.Date\r\n, ISNULL(ErrorCount, 0) AS ErrorCount\r\nFROM CTE_Date d\r\n\r\nLEFT JOIN CTE_Errors e\r\n\tON d.DateKey = e.run_date\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Scheduled SQL Agent Jobs Errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "f2dd5c76-1cd5-451e-ae6b-46c4fdb4d2ca"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "semi-dark-red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "ErrorCount"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "DECLARE @DaysWindow INT = 30;\r\n\r\nWITH CTE_Date\r\nAS \r\n(SELECT DateKey\r\n\t  , Date \r\n FROM [MKS_MasterData].[dbo].[DimDate] \r\n WHERE Date BETWEEN DATEADD(DAY, -@DaysWindow, GETDATE()) AND GETDATE()\r\n)\r\n\r\n, CTE_Errors\r\nAS\r\n(\r\n  SELECT [AppName]\r\n      ,COUNT(*) AS ErrorCount\r\n      ,CAST([Timestamp] AS DATE) AS [Date]\r\n  FROM [MKS_MasterData].[dbo].[PythonLogs]\r\n  WHERE LogMessage LIKE '%ERROR%'\r\n  AND [Timestamp] BETWEEN DATEADD(MONTH, -@DaysWindow, GETDATE()) AND GETDATE()\r\n  GROUP BY [AppName], CAST([Timestamp] AS DATE)\r\n)\r\n\r\n\r\nSELECT d.Date\r\n, ISNULL(ErrorCount, 0) AS ErrorCount\r\nFROM CTE_Date d\r\n\r\nLEFT JOIN CTE_Errors e\r\n\tON d.Date = e.[Date]\r\n\r\n\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Python Applications Error Count",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "light-blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "basic",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT j.[name]\r\n, COUNT(*) AS Executions\r\nFROM (SELECT * FROM [msdb].[dbo].[sysjobhistory] WHERE step_id <> 0 ) AS jh\r\n\r\nJOIN [msdb].[dbo].[sysjobs] j\r\n  ON j.[job_id] = jh.[job_id]\r\n\r\nWHERE CAST(SUBSTRING(CAST(run_date AS VARCHAR(8)), 1,4) + '-' + SUBSTRING(CAST(run_date AS VARCHAR(8)), 5,2) + '-' + SUBSTRING(CAST(run_date AS VARCHAR(8)), 7,2) AS DATETIME)  = CAST(GETDATE() AS DATE)\r\n        -- BETWEEN DATEADD(DAY, -2, GETDATE()) AND  GETDATE()\r\n\r\nGROUP BY j.[name]\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SQL Agent Executions Today",
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": {},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ErrorMessage"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 746
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SSISDB_Project"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 196
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PackageName"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 339
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ce.project_name AS SSISDB_Project\r\n, ce.package_name      AS PackageName\r\n, pe.message           AS ErrorMessage\r\n, message_time         AS EventDateTime\r\nFROM \r\n    SSISDB.catalog.executions ce\r\nJOIN  SSISDB.catalog.event_messages pe\r\n    ON pe.operation_id = ce.execution_id\r\nWHERE event_name = 'OnError'\r\nAND message_time BETWEEN DATEADD(DAY, -2, GETDATE()) AND GETDATE()\r\nORDER by message_time DESC",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SSIS Error Logs (Last 2 Days)",
+      "type": "table"
+    },
+    {
+      "datasource": {},
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AppName"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 188
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "LogMessage"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1395
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "10.1.9",
+      "targets": [
+        {
+          "dataset": "ADHOC_LightSone",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_PRIXDSBRAIN01}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT [AppName]\r\n    ,[LogMessage]\r\n  FROM [MKS_MasterData].[dbo].[PythonLogs]\r\n  WHERE [Timestamp] BETWEEN DATEADD(DAY, -2, GETDATE()) AND GETDATE()\r\n  AND LogMessage LIKE '%ERROR%'\r\n  ORDER BY Timestamp DESC",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Python Applications Error Logs (Past 2 Days)",
+      "transparent": true,
+      "type": "table"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "SSIS & Python Programs Monitoring",
+  "uid": "f0bd5457-ba33-4158-b04b-15f993f702ba",
+  "version": 7,
+  "weekStart": ""
+}

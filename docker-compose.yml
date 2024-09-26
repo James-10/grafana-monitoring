@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx-monitoring:v1.0.0
+    container_name: nginx-monitoring
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./hosts:/etc/hosts:ro
+      - ./certs/certificate.pem:/etc/nginx/ssl/certificate.pem
+      - ./certs/private_key.pem:/etc/nginx/ssl/private_key.pem
+      - ./certs/cert_password:/etc/nginx/ssl/cert_password
+    networks:
+      - webnet
+  
+  grafana:
+    image: grafana/grafana:10.1.9
+    container_name: grafana-monitoring
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./dashboards/:/etc/grafana/provisioning/dashboards/
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge
